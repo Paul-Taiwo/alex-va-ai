@@ -52,7 +52,7 @@ const InputContainer = styled.div`
   align-items: center;
   gap: 10px;
   width: 100%;
-  max-width: 450px;
+  max-width: 550px;
   padding: 0;
   position: relative;
 
@@ -84,6 +84,12 @@ const SendButton = styled.button`
   &:disabled {
     opacity: 0.8;
     cursor: default;
+  }
+
+  &.btn-sm {
+    width: 40px;
+    height: 40px;
+    padding: 0;
   }
 `;
 

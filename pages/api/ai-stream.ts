@@ -57,14 +57,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   process.setMaxListeners(0);
 
   try {
-    const { messages } = req.body;
+    const { messages, muted } = req.body;
 
     const gptStream = await streamGptText(messages);
-    // const audioStream = await PlayHT.stream(gptStream);
 
-    const stream = merge2(gptStream);
-
-    stream.pipe(res);
+    if (muted) {
+      gptStream.pipe(res);
+    } else {
+      const audioStream = await PlayHT.stream("Hey");
+      const stream = merge2(gptStream, audioStream);
+      stream.pipe(res);
+    }
   } catch (err) {
     console.log(err);
     res.status(500).send({ error: "failed to fetch data" });

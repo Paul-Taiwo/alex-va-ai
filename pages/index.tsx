@@ -1,9 +1,17 @@
 import axios from "axios";
 import { useLottie } from "lottie-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bot, PenLine, SendHorizontal, User } from "lucide-react";
+import {
+  Bot,
+  FileUp,
+  PenLine,
+  SendHorizontal,
+  User,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
-import * as PlayHT from "playht";
+import { read, utils } from "xlsx";
 
 import {
   Container,
@@ -27,6 +35,7 @@ const options = {
 };
 
 export default function Home() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +44,7 @@ export default function Home() {
 
   const { View, setSpeed } = useLottie(options, style);
 
+  const [muted, setMuted] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [audioSrc, setAudioSrc] = useState<string>("");
   const [prompt, setPrompt] = useState<string>("");
@@ -82,7 +92,7 @@ export default function Home() {
         const response = await fetch("/api/ai-stream", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: newMessages }),
+          body: JSON.stringify({ messages: newMessages, muted }),
         });
 
         const responseClone = response.clone();
@@ -106,7 +116,7 @@ export default function Home() {
         setIsLoading(false);
       }
     },
-    []
+    [muted]
   );
 
   const handleSendMessage = async (newMessage: string) => {
@@ -128,6 +138,20 @@ export default function Home() {
       resetTranscript();
       SpeechRecognition.startListening({ continuous: true });
     }
+  };
+
+  const handleFileUpload = async (e: { target: HTMLInputElement }) => {
+    const target = e.target as HTMLInputElement;
+    const file = await target?.files?.[0]?.arrayBuffer();
+
+    const workbook = read(file);
+
+    const textContent = utils
+      .sheet_to_txt(workbook.Sheets[workbook.SheetNames[0]])
+      .trim();
+
+    const sheetData = "Read and analyse the following data:\n\n\n" + textContent;
+    handleSendMessage(sheetData);
   };
 
   useEffect(() => {
@@ -155,18 +179,44 @@ export default function Home() {
         <PenLine className='pen-icon' />
 
         <Input value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+        <input
+          accept='.csv,.xlsx'
+          ref={fileInputRef}
+          className='d-none'
+          type='file'
+          multiple={false}
+          onChange={handleFileUpload}
+        />
 
-        <SendButton
-          type='button'
-          disabled={isLoading}
-          onClick={() => handleSendMessage(prompt)}>
-          <SendHorizontal className='send-icon' />
-        </SendButton>
+        <div className='d-flex'>
+          <SendButton
+            type='button'
+            disabled={isLoading}
+            className='me-2'
+            onClick={() => handleSendMessage(prompt)}>
+            <SendHorizontal className='send-icon' />
+          </SendButton>
+
+          <SendButton
+            type='button'
+            disabled={isLoading}
+            onClick={() => fileInputRef.current?.click()}>
+            <FileUp />
+          </SendButton>
+        </div>
       </InputContainer>
 
-      <div>
-        <SendButton type='button' disabled={isLoading} onClick={handleListen}>
+      <div className='d-flex align-items-end'>
+        <SendButton
+          className='me-2'
+          type='button'
+          disabled={isLoading}
+          onClick={handleListen}>
           {isLoading ? "Thinking..." : listening ? "Stop Listening" : "Start Listening"}
+        </SendButton>
+
+        <SendButton className='btn btn-sm' onClick={() => setMuted(!muted)}>
+          {muted ? <VolumeX /> : <Volume2 />}
         </SendButton>
       </div>
 
