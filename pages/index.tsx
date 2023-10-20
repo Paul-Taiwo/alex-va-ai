@@ -44,7 +44,7 @@ export default function Home() {
 
   const { View, setSpeed } = useLottie(options, style);
 
-  const [muted, setMuted] = useState<boolean>(false);
+  const [muted, setMuted] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [audioSrc, setAudioSrc] = useState<string>("");
   const [prompt, setPrompt] = useState<string>("");
@@ -87,7 +87,7 @@ export default function Home() {
   };
 
   const gptCall = useCallback(
-    async (newMessages: { role: string; content: string }[]) => {
+    async (newMessages: { role: string; content: string }[], muted: boolean) => {
       try {
         const response = await fetch("/api/ai-stream", {
           method: "POST",
@@ -116,7 +116,7 @@ export default function Home() {
         setIsLoading(false);
       }
     },
-    [muted]
+    []
   );
 
   const handleSendMessage = async (newMessage: string) => {
@@ -127,7 +127,7 @@ export default function Home() {
     const newMessages = [...messages, { content: newMessage, role: "user" }];
     setMessages(newMessages);
 
-    await gptCall(newMessages);
+    await gptCall(newMessages, muted);
   };
 
   const handleListen = () => {
@@ -166,7 +166,7 @@ export default function Home() {
   }, [messages]);
 
   useEffect(() => {
-    gptCall([{ role: "user", content: "hello there" }]);
+    gptCall([{ role: "user", content: "hello there" }], true);
   }, [gptCall]);
 
   useEffect(() => setPrompt(transcript), [transcript]);
