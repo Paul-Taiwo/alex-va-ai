@@ -64,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     if (muted) {
       gptStream.pipe(res);
     } else {
-      const audioStream = await PlayHT.stream("Hey");
+      const audioStream = await PlayHT.stream(gptStream);
       const stream = merge2(gptStream, audioStream);
       stream.pipe(res);
     }
