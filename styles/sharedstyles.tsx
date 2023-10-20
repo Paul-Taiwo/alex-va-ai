@@ -52,7 +52,7 @@ const InputContainer = styled.div`
   align-items: center;
   gap: 10px;
   width: 100%;
-  max-width: 550px;
+  max-width: 600px;
   padding: 0;
   position: relative;
 
